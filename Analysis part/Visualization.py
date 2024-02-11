@@ -13,17 +13,16 @@ test_df = pd.read_csv(
 )
 df = train_df.merge(test_df, how="outer")
 
+
 # price plotting data
-    
-def price_histplot():
-
-    sns.histplot(
-        data=df,
-        x='SalePrice',
-        stat='density',
-        kde=True,
-    )
-    plt.show()
-    return
-
-price_histplot()
+class price_sales:
+    def price_histplot():
+        sns.histplot(
+            data=df,
+            x="SalePrice",
+            stat="density",
+            kde=False,
+        )
+        plt.show()
+        
+    def add(): return 10
