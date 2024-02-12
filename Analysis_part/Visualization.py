@@ -94,9 +94,7 @@ def relation_between_sizes_and_price():
     axe[0].set_xlabel("infront of house size")
     axe[0].set_ylabel("SalePrice")
 
-    sns.regplot(
-        data=df, x="LotArea", y="SalePrice", color="r", marker="o", ax=axe[1]
-    )
+    sns.regplot(data=df, x="LotArea", y="SalePrice", color="r", marker="o", ax=axe[1])
     axe[1].set_label("relation of house size and price")
     axe[1].set_xlabel("house size")
     axe[1].set_ylabel("SalePrice")
@@ -237,7 +235,7 @@ def years_vs_price():
             axe[i].set_xlabel(col)
             axe[i].set_ylabel("House Price")
             axe[i].set_title("House Price vs " + col)
-     
+
     return
 
 
@@ -253,8 +251,8 @@ def basement():
         sns.relplot(
             data=df,
             x=col,
-            y='SalePrice',
-            markers='o',
+            y="SalePrice",
+            markers="o",
         )
         plt.xlabel(col)
         plt.ylabel("House Price")
@@ -263,107 +261,57 @@ def basement():
 
 
 def temprature():
-    columns = ['Heating', 'HeatingQC', 'CentralAir']
+    columns = ["Heating", "HeatingQC", "CentralAir"]
     fig, axe = plt.subplots(1, 2, figsize=(10, 3))
     for i, col in enumerate(columns):
-        
-        if  col == 'CentralAir':
-            sns.barplot(
-                data=df,
-                x=col,
-                y='SalePrice',
-                width=.2,
-                ax=axe[0]
-            )
-            sns.scatterplot(
-                data=df,
-                x=col,
-                y='SalePrice',
-                ax=axe[1]
-            )
+
+        if col == "CentralAir":
+            sns.barplot(data=df, x=col, y="SalePrice", width=0.2, ax=axe[0])
+            sns.scatterplot(data=df, x=col, y="SalePrice", ax=axe[1])
 
         else:
             sns.relplot(
                 data=df,
                 x=col,
-                y='SalePrice',
+                y="SalePrice",
             )
 
         plt.xlabel(col)
         plt.ylabel("House Price")
         plt.title("House Price vs " + col)
 
-    return    
+    return
 
 
 def garden_area():
 
     fig, axe = plt.subplots(1, 2, figsize=(10, 5))
 
-    sns.scatterplot(
-        data=df,
-        x='GrLivArea',
-        y='SalePrice',
-        markers='.',
-        ax=axe[0]
-    )    
-    sns.lineplot(
-        data=df,
-        x='GrLivArea',
-        y='SalePrice',
-        markers='.',
-        ax=axe[1]
-    )    
-        
-    
+    sns.scatterplot(data=df, x="GrLivArea", y="SalePrice", markers=".", ax=axe[0])
+    sns.lineplot(data=df, x="GrLivArea", y="SalePrice", markers=".", ax=axe[1])
+
     return
 
 
 def garage():
-    
+
     fig, axe = plt.subplots(1, 3, figsize=(10, 5))
 
-    sns.scatterplot(
-        data=df,
-        x='GarageCars',
-        y='SalePrice',
-        markers='.',
-        ax=axe[0]
-    )    
-    sns.lineplot(
-        data=df,
-        x='GarageArea',
-        y='SalePrice',
-        ax=axe[1]
-    )    
-    sns.scatterplot(
-        data=df,
-        x='GarageArea',
-        y='SalePrice',
-        markers='.',
-        ax=axe[2]
-    )    
+    sns.scatterplot(data=df, x="GarageCars", y="SalePrice", markers=".", ax=axe[0])
+    sns.lineplot(data=df, x="GarageArea", y="SalePrice", ax=axe[1])
+    sns.scatterplot(data=df, x="GarageArea", y="SalePrice", markers=".", ax=axe[2])
 
     plt.show()
     return
+
 
 def wood_deck_area():
-    
+
     fig, axe = plt.subplots(1, 2, figsize=(10, 5))
 
-    sns.scatterplot(
-        data=df,
-        x='WoodDeckSF',
-        y='SalePrice',
-        markers='.',
-        ax=axe[0]
-    )    
-    sns.lineplot(
-        data=df,
-        x='WoodDeckSF',
-        y='SalePrice',
-        ax=axe[1]
-    )    
+    sns.scatterplot(data=df, x="WoodDeckSF", y="SalePrice", markers=".", ax=axe[0])
+    sns.lineplot(data=df, x="WoodDeckSF", y="SalePrice", ax=axe[1])
 
     plt.show()
     return
+
