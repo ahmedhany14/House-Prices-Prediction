@@ -28,8 +28,6 @@ class inverses:
         Y_prediction = scaler1.inverse_transform(Y_prediction)
         return Y_prediction
 
-
-
     def invese_Scaled_loged_linear_model(Y_prediction, y_actual):
         log_FT = FunctionTransformer(np.log)
         scaler1 = StandardScaler()
@@ -243,7 +241,7 @@ class Models:
                 pip.fit(X, Y)
                 y_predict = pip.predict(X)
                 score = r2_score(y_true=Y, y_pred=y_predict)
-                print("when alpha = ", i, 'and lambda = ', j, "score = ", score)
+                print("when alpha = ", i, "and lambda = ", j, "score = ", score)
 
                 if score > max_score:
                     max_score = score
@@ -259,7 +257,6 @@ class Models:
         pip.fit(X, Y)
 
         return pip
-
 
     def DecisionTreeRegressor_Scaled_model(
         x_train=pd.DataFrame(),

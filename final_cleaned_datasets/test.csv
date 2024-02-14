@@ -1,4 +1,4 @@
-,house_area,quality,year_built,year_remodel_add,garage_year_build,number_of_bathrooms,basement_area,has_Fireplaces_or_not,TotRmsAbvGrd,grade_living_area,garage_area,garage_capacite,SalePrice
+,house_area,quality,year_built,year_remodel_add,garage_year_build,number_of_bathrooms,basement_area,has_Fireplaces_or_not,Total_rooms,grade_living_area,garage_area,garage_capacite,SalePrice
 0,11622,5,1961,1961,1961,1,882,0,5,896,730,1,169277
 1,14267,6,1958,1958,1958,1,1329,0,6,1329,312,1,187758
 2,13830,5,1997,1998,1997,2,928,1,6,1629,482,2,183583
