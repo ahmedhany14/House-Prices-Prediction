@@ -18,57 +18,35 @@ from sklearn.linear_model import LinearRegression, Ridge, Lasso
 from sklearn.tree import DecisionTreeRegressor
 
 
-def Columns_transformers(Y=pd.DataFrame()):
+def preprocesse_scaled_linear_model(X, Y):
+    # X & Y (Stander scaling)
 
-    CT = ColumnTransformer(
-        transformers=[
-            (
-                "One Hot Encode",
-                OneHotEncoder(
-                    categories=[
-                        ["Pave", "Grvl"],
-                        ['Floor', 'Wall', 'Grav', 'GasW', 'GasA']
-                    ],
-                    drop="first",
-                ),
-                ["street", 'heating'],
-            ),
-            (
-                "Ordina Encode",
-                OrdinalEncoder(categories=[["N", "Y"], ["Po", "Fa", "TA", "Gd", "Ex"]]),
-                ["central_air_conditioning", "basement_quality"],
-            ),
-        ],
-        remainder="passthrough",
-    )
+    scaler = StandardScaler()
+    scaler1 = StandardScaler()
 
-    y_transformer = FunctionTransformer(func=np.log)
-    
-    y_transformer.fit(Y)
-    
-    return CT, Y
+    X = scaler.fit_transform(X)
+    Y = scaler1.fit_transform(Y)
+
+    return X, Y
 
 
-class PipLines_:
+class Models:
 
-    def Linear_Standrized_pipline(
+    def Linear_Scaled_model(
         x_train=pd.DataFrame(),
         y_train=pd.DataFrame(),
     ):
-
-        CT, y_train = Columns_transformers(Y=y_train)
-        scaler = StandardScaler()
-        lin_reg = DecisionTreeRegressor(random_state = 100)
-        pip = Pipeline(
-            [
-                ("Columns transformer", CT),
-                ("Standard Scaler", scaler),
-                ("Linear Regression", lin_reg),
-            ]
-        )
+        # first linear model
+        '''
+            this model will work with only scaled data
+            which i will scale the x and y data
+        '''
         
-        pip.fit(X=x_train, y=y_train)
+        x_train, y_train = preprocesse_scaled_linear_model(X=x_train, Y=y_train)
+        
+        linear_regression = LinearRegression()
+        linear_regression.fit(X=x_train,y=y_train)
 
-        return pip
-
-
+        return linear_regression
+        
+        
