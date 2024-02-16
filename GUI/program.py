@@ -11,7 +11,6 @@ from PIL import Image
 import tkinter as tk
 from tkinter import ttk as ttk
 from tkinter import messagebox
-
 # region DB
 root = Tk()
 w = 500
@@ -304,13 +303,37 @@ Quality_entry = PlaceholderEntry(
 img = PhotoImage(file=r"GUI/photos/photo_6_2024-02-16_00-11-07.png")
 img = img.subsample(10, 10)
 
+import pandas as pd
+import Model_process as model
 
 def submit():
-    # if(len(House_area_entry.get())>0 and len(Basement_Area_entry.get())>0 and len(Grade_living_area_entry.get())>0 and len(Garage_Area_entry.get())>0):
-    #   cr.execute(f'insert into suppliers(sname, snumber, pname, pprice) values("{House_area_entry.get()}",{int(Basement_Area_entry.get())} , "{Grade_living_area_entry.get()}",{int(Garage_Area_entry.get())} )')
-    #    db.commit()
+    df = pd.read_csv(r'/home/ahmed/Ai/Data science and Ml projects/House-Prices-Prediction---Data-Science-Ml-project/final_cleaned_datasets/Data_set.csv')
+
+    df = df.drop(columns=['SalePrice', 'Unnamed: 0'])
+
+    data = {
+        'house_area' : int(House_area_entry.get()),
+        'quality' :int(Quality_entry.get()),
+        'year_built' : int(Year_Built_entry.get()),
+        'year_remodel_add' : int(Year_Remodel_Add_entry.get()),
+        'garage_year_build' : int(Garage_Year_Build_entry.get()),
+        'number_of_bathrooms' : int(Number_Of_Bathrooms_entry.get()),
+        'basement_area' : int(Basement_Area_entry.get()),
+        'has_Fireplaces_or_not' : int(Number_Of_Fireplaces_entry.get()),
+        'Total_rooms' : int(Number_Of_Rooms_entry.get()),
+        'grade_living_area' : int(Grade_living_area_entry.get()),
+        'garage_area' : int(Garage_Area_entry.get()),
+        'garage_capacite' : int(Garage_Capacite_entry.get())
+    }
     
-    messagebox.showinfo("Added", "Added Succefully")
+    print(data)
+
+    columns = df.columns
+    X = pd.DataFrame(columns = columns)
+    X.loc[len(X)] = data
+    price = model.prediction(X)
+    ret = "The price of the house ", price, ' $'
+    messagebox.showinfo('Prediction ',ret)
 
 
 btn_add = Button(
