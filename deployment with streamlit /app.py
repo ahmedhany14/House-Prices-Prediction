@@ -6,6 +6,10 @@ import matplotlib.pyplot as plt
 import analysis as an
 import models as ml
 import cleaning as cl
+import warnings
+
+pd.options.display.max_columns = None
+warnings.filterwarnings("ignore")
 
 # header of the app and description of the app
 st.header("House Price App Prediction")
@@ -19,10 +23,10 @@ train_data = pd.read_csv(
 # ---------------------------------EDA---------------------------------#
 # This Bolck of code will be contains The EDA of the Traing dataset
 # in which will contain the following steps:
+# 1) Display the distribution of the SalePrice column
 
 
 # creating button for displaying the EDA
-
 EDA_button = st.toggle("Display EDA")
 
 if EDA_button:
@@ -38,11 +42,24 @@ if EDA_button:
         null_values,
     )
 
-    #
+    # Visualization Part
 
+    # Display the distribution of the SalePrice column
+    sale_price_togle = st.toggle("Sale Price Distribution")
+    if sale_price_togle:
+        st.write("### Sale Price Distribution")
+        an.distribution(["SalePrice"], False, train_data)
+        st.write("### Sale Price Distribution with Log")
+        an.distribution(["SalePrice"], True, train_data)
 
-
-
+    # Display the correlation between the Numirecal features and the target
+    correlation_togle = st.toggle(
+        "Correlation between Numirecal features and the target"
+    )
+    if correlation_togle:
+        numerica_columns = an.Get_the_numerical_features(train_data)
+        st.write("### Correlation between Numirecal features and the target")
+        an.Heat_map(numerica_columns, train_data)
 
 # ---------------------------------Cleaning and preprocessing---------------------------------#
 
