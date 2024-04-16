@@ -23,8 +23,14 @@ train_data = pd.read_csv(
 # ---------------------------------EDA---------------------------------#
 # This Bolck of code will be contains The EDA of the Traing dataset
 # in which will contain the following steps:
-# 1) Display the distribution of the SalePrice column
-
+# 1) Display the train_data DataFrame
+# 2) Display the shape and columns with missing data of the train_data DataFrame
+# 3) Display the distribution of the SalePrice column
+# 4) Display the correlation between the Numirecal features and the target
+# 5) Displaying a scater plot for the area features with the target, to see the relationship between them, if they are related or not
+# 6) Displaying the distribution beteen the area features with the target, to see if they are need to scale or not
+# 7) Displaying the relationship between the Year features with the target
+# 8) Displaying the relationship between the numerical discrete features with the target
 
 # creating button for displaying the EDA
 EDA_button = st.toggle("Display EDA")
@@ -60,6 +66,39 @@ if EDA_button:
         numerica_columns = an.Get_the_numerical_features(train_data)
         st.write("### Correlation between Numirecal features and the target")
         an.Heat_map(numerica_columns, train_data)
+
+    # Displaying a scater plot for the area features with the target, to see the relationship between them, if they are related or not
+    area_togle = st.toggle("Scater plot for the area features with the target")
+    if area_togle:
+        area_columns = an.Get_areas_columns(train_data)
+        st.write(
+            "### Scater plot for the relationship between area features with the target"
+        )
+        an.Scater_plot(area_columns, train_data)
+
+    # Displaying the distribution beteen the area features with the target, to see if they are need to scale or not
+    Areas_price_togle = st.toggle("Areas Distribution")
+    if Areas_price_togle:
+        area_columns = an.Get_areas_columns(train_data)
+        st.write("### Areas Distribution")
+        an.distribution(area_columns, False, train_data)
+
+    # Displaying the relationship between the Year features with the target
+    Year_togle = st.toggle("Year relationship with the target")
+    if Year_togle:
+        year_columns = an.Get_year_columns(train_data)
+        st.write("### Year Distribution")
+        an.Lineplot(year_columns, train_data)
+
+    # Displaying the relationship between the numerical discrete features with the target
+    num_discrete_togle = st.toggle("Numerical Discrete relationship with the target")
+    if num_discrete_togle:
+        num_discrete_columns = an.Get_discrete_numerical_features(train_data)
+        # st.write(num_discrete_columns)
+        st.write("### Numerical Discrete relationship with the target")
+        an.Barplot(num_discrete_columns, train_data)
+# ----------------------------------END EDA----------------------------------#
+
 
 # ---------------------------------Cleaning and preprocessing---------------------------------#
 
