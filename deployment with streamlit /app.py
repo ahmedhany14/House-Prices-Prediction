@@ -100,43 +100,97 @@ if EDA_button:
 # ----------------------------------END EDA----------------------------------#
 
 
-# ---------------------------------Cleaning and preprocessing---------------------------------#
+# ---------------------------------User Input and Train Preprocessing ---------------------------------#
+# Steps:
+# 1. removing the columns with high missing values
+# 2. Handling massing values for the train data
+# 2.1. Numerical values (train_data data set)
+# 2.2. Categorical values (train_data data set)
+# 2.3. Handling massing values for the user data
 
-
-# This Bolck of code will be contains The Cleaning of the Traing dataset
-# in which will contain the following steps:
-
-
-# ---------------------------------ML Model---------------------------------#
-
-
-# ---------------------------------User Input---------------------------------#
-# This block of code is for the sidebar of the app,
-# where the user can select the analysis, cleaning, and model options
+# 3.Outliers for train_data
+# 4.Feature Construction (construction of new features for both data sets and then convert them to Binay Columns)
+# 5.Feature Selection on train data
+# 6.log SalePrice to fix skew
+# 7.Dummy dataset
 
 
 # function for getting user input data, which will be taken as a CSV file from user
 def user_input_data():
 
+    # This block of code is for the sidebar of the app,
     st.sidebar.header("Upload your CSV data")
     user_input = st.sidebar.file_uploader("Upload your CSV file", type=["csv"])
 
     if user_input is not None:
         # convring data to csv file
-        df = pd.read_csv(user_input)
+        user_input = pd.read_csv(user_input)
         # Display the DataFrame
-        st.write("Uploaded DataFrame:", df)
+        st.write("Uploaded DataFrame:", user_input)
         return user_input
 
     else:
         return None
 
 
-# loading the data
+# loading the data from user
 user_data = user_input_data()
+if user_data is not None:
+    # now it's time to clean the data, to train the model on the train data, and predict the out put for the user data
+    combin = [train_data, user_data]
 
+    # 1. removing the columns with high missing values
+    cl.remove_column_with_high_missing_values(train_data, combin)
 
-# ---------------------------------User Input prepocessing---------------------------------#
+    # 2. Handling massing values for the train data
+
+    null_num_columns, null_cat_columns = cl.get_null_columns(train_data)
+    # 2.1. Numerical values (train_data data set)
+    train_data = cl.handle_missing_Numerical_values(train_data, null_num_columns)
+    # 2.2. Categorical values (train_data data set)
+    train_data = cl.handle_missing_Categorical_values(train_data, null_cat_columns)
+
+    # 2.3. Handling massing values for the user data
+    null_num_columns, null_cat_columns = cl.get_null_columns(user_data)
+    for column in null_cat_columns:
+        user_data[column] = cl.fill_numerical_values_with_mode(user_data, column)
+
+    for column in null_num_columns:
+        user_data[column] = cl.fill_numerical_values_with_mean(user_data, column)
+
+    # 3.Outliers for train_data
+    train_data = cl.Outliers_for_train(train_data)
+    combin = [train_data, user_data]
+
+    # 4. Feature Construction (construction of new features for both data sets, and then convert them to Binay Columns)
+    combin = cl.Feature_construction(combin)
+
+    # 5.Feature Selection on train data
+    combin = cl.Feature_selection(train_data, combin)
+
+    # 6. log SalePrice to fix skew
+    train_data["SalePrice"] = np.log10(train_data["SalePrice"])
+
+    # 7. Dummy dataset
+    train_data = pd.get_dummies(train_data, drop_first=True)
+    user_data = pd.get_dummies(user_data, drop_first=True)
+    user_data["Exterior1st_ImStucc"] = False
+    user_data["Exterior1st_Stone"] = False
+    final_user_data = pd.DataFrame()
+    for col in train_data.columns:
+        if col != "SalePrice":
+            final_user_data[col] = user_data[col]
+    user_data = final_user_data
+
+    for col in train_data.columns:
+        if train_data[col].dtype == "bool":
+            train_data[col] = train_data[col].astype("int32")
+
+    for col in user_data.columns:
+        if user_data[col].dtype == "bool":
+            user_data[col] = user_data[col].astype("int32")
+
+# ---------------------------------ML Model---------------------------------#
 
 
 # ---------------------------------User Input Prediction---------------------------------#
