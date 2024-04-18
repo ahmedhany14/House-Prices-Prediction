@@ -7,6 +7,15 @@ import analysis as an
 import models as ml
 import cleaning as cl
 import warnings
+import seaborn as sns
+import math
+from sklearn.metrics import (
+    r2_score,
+    mean_absolute_error,
+    mean_squared_error,
+)
+
+pd.options.display.max_columns = None
 
 pd.options.display.max_columns = None
 warnings.filterwarnings("ignore")
@@ -135,6 +144,7 @@ def user_input_data():
 
 # loading the data from user
 user_data = user_input_data()
+Output = user_data.copy()
 if user_data is not None:
     # now it's time to clean the data, to train the model on the train data, and predict the out put for the user data
     combin = [train_data, user_data]
@@ -192,5 +202,89 @@ if user_data is not None:
 
 # ---------------------------------ML Model---------------------------------#
 
+if user_data is not None:
 
+    data = {
+        "model": [],
+        "MAE": [],
+        "MSE": [],
+        "RMSE": [],
+        "train_score": [],
+        "test_score": [],
+    }
+    models = pd.DataFrame(columns=data)
+
+    def split(data):
+        X = data.drop("SalePrice", axis=1)
+        Y = data["SalePrice"]
+        from sklearn.model_selection import train_test_split
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, Y, test_size=0.2, random_state=42
+        )
+        return X_train, X_test, y_train, y_test
+
+    x_train, x_test, y_train, y_test = split(train_data)
+
+    def evaluate(model,model_name, x_train, x_test, y_train, y_test):
+        train_prediction = model.predict(x_train)
+        test_prediction = model.predict(x_test)
+        score_train = r2_score(y_true=y_train, y_pred=train_prediction)
+
+        score_test = r2_score(y_true=y_test, y_pred=test_prediction)
+        MAE = mean_absolute_error(y_true=y_test, y_pred=test_prediction)
+        MSE = mean_squared_error(y_true=y_test, y_pred=test_prediction)
+        RMSE = np.sqrt(mean_absolute_error(y_true=y_test, y_pred=test_prediction))
+        data = {
+            "model": model_name,
+            "MAE": MAE,
+            "MSE": MSE,
+            "RMSE": RMSE,
+            "train_score": score_train,
+            "test_score": score_test,
+        }
+
+        return data
+
+    # Linear Regression model
+    lin_reg = ml.Linear_Regression(x_train, y_train)
+    # Linear Regression model with scaling
+    lin_reg_scaled = ml.Linear_scaled(x_train, y_train)
+    # ridge Regression model
+    ridge = ml.Ridge_Regression(x_train, y_train)
+    # ElasticNet Regression model
+    elastic = ml.ElasticNet_Regression(x_train, y_train)
+    # Random Forest model
+    rf_model = ml.RandomForest(x_train, y_train)
+    # Voting model
+    vot_model = ml.Voting_system(x_train, y_train)
+
+    models.loc[len(models)] = evaluate(lin_reg,"lin reg", x_train, x_test, y_train, y_test)
+    models.loc[len(models)] = evaluate(lin_reg_scaled,"lin reg scaled", x_train, x_test, y_train, y_test)
+    models.loc[len(models)] = evaluate(ridge,"Ridge", x_train, x_test, y_train, y_test)
+    models.loc[len(models)] = evaluate(elastic,"Elastic", x_train, x_test, y_train, y_test)
+    models.loc[len(models)] = evaluate(rf_model,"Random Foreest", x_train, x_test, y_train, y_test)
+    models.loc[len(models)] = evaluate(vot_model,"Votting", x_train, x_test, y_train, y_test)
+
+    model_performance = st.toggle("Model Performance")
+    if model_performance:
+        st.write("### Models Performance on the train data")
+        st.write(models.sort_values(by="test_score", ascending=False))
+        fig = plt.figure(figsize=(10, 5))
+        sns.lineplot(y=models["test_score"], x=models["model"])
+        st.pyplot(fig)
 # ---------------------------------User Input Prediction---------------------------------#
+
+    if user_data is not None:
+        def output_inverse(value):
+            value_inverse = math.pow(10, value)
+            return value_inverse
+
+
+        predictions = vot_model.predict(user_data)
+
+        for i in range(len(predictions)):
+            predictions[i] = output_inverse(predictions[i])
+        
+        Output["Predictions 📈"] = predictions
+        st.write("### Predicted Sale Price for the user data")
+        st.write(Output)
