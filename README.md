@@ -30,7 +30,7 @@ The dataset used in this project from Kaggle, to download it use this [link](htt
 
 ## Installing packages
 
-#### open CMD in VS code, and write following commands
+#### open Terminal in VS code, and write following commands
         pip install pandas
         pip install sklearn
         pip install streamlit
@@ -39,6 +39,6 @@ The dataset used in this project from Kaggle, to download it use this [link](htt
 
 ## Deplyment and run the application
 
-#### open CMD in VS code, and write following commands
+#### open Terminal in VS code, and write following commands
         cd "deployment with streamlit"
         streamlit run app.py
