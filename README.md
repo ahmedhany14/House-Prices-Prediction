@@ -5,8 +5,6 @@
   <h3 align="center">ML Project for predicting house price</h3>
 </p>
 
-<h4 align="center">Ecommerce API built using NodeJS & Express & MongoDB</h4>
-
 ## Table of Contents
 
 - [Table of Contents](#table-of-contents)
