@@ -11,7 +11,7 @@
 - [Dataset](#Dataset)
 - [Packages and frameworks i used](#packages-and-frameworks-i-used)
 - [Installing packages](#installing-packages)
-- [Deplyment the application](#deplyment-the-application)
+- [Deplyment and run the application](#deplyment-the-application)
 
 ## Description
 
@@ -24,7 +24,16 @@ The dataset used in this project from Kaggle, to download it use this [link](#ht
 ## Packages and frameworks i used
 
 * [pandas](#) for datasets
-* [sklearn](#) for machine learning and data cleaning 
+* [sklearn](#) for machine learning models and data cleaning 
 * [streamlit](#) for deployment
-* [seaboarn](#) and matplotlib for analysis and visualization and EDA
+* [seaborn and matplotlib](#) for data analysis and visualization and EDA
+
+## Installing packages
+
+### open CMD in VS code, and write following commands
+        pip install pandas
+        pip install sklearn
+        pip install streamlit
+        pip install seaborn
+        pip install matplotlib
 
