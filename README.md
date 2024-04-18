@@ -23,7 +23,7 @@ The dataset used in this project from Kaggle, to download it use this [link](#ht
 
 ## Packages and frameworks i used
 
-* [pandas] for datasets
+* [pandas for datasets](#)
 * [sklearn] for machine learning and data cleaning
 * [streamlit] for deployment
 * [seaboarn] and matplotlib for analysis and visualization and EDA
