@@ -19,7 +19,7 @@ This repository contains code and resources for predicting house prices using ma
 
 ## Dataset
 
-The dataset used in this project from Kaggle, to download it use this [link](# https://www.kaggle.com/competitions/house-prices-advanced-regression-techniques/data)
+The dataset used in this project from Kaggle, to download it use this [link](https://www.kaggle.com/competitions/house-prices-advanced-regression-techniques/data)
 
 ## Packages and frameworks i used
 
