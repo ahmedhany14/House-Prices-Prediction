@@ -23,10 +23,10 @@ The dataset used in this project from Kaggle, to download it use this [link](htt
 
 ## Packages and frameworks i used
 
-* [pandas](#) for datasets
-* [sklearn](#) for machine learning models and data cleaning 
-* [streamlit](#) for deployment
-* [seaborn and matplotlib](#) for data analysis and visualization and EDA
+* (pandas)[https://pandas.pydata.org/docs/] for datasets
+* (sklearn)[https://scikit-learn.org/stable/index.html] for machine learning models and data cleaning 
+* (streamlit)[https://docs.streamlit.io/] for deployment
+* (seaborn)[https://seaborn.pydata.org/] and (matplotlib)[https://matplotlib.org/] for data analysis and visualization and EDA
 
 ## Installing packages
 
