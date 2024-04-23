@@ -25,7 +25,7 @@ st.header("House Price App Prediction")
 st.write("This App is for predicting house prices in USA")
 # uploading the data
 train_data = pd.read_csv(
-    "train.csv"
+    "Date_set/train.csv"
 )
 
 
