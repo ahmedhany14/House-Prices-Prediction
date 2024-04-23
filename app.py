@@ -135,7 +135,8 @@ def user_input_data():
         # convring data to csv file
         user_input = pd.read_csv(user_input)
         # Display the DataFrame
-        st.write("Uploaded DataFrame:", user_input)
+        if user_input is not None:
+            st.write("Uploaded DataFrame:", user_input)
         return user_input
 
     else:
@@ -144,7 +145,9 @@ def user_input_data():
 
 # loading the data from user
 user_data = user_input_data()
-Output = user_data.copy()
+Output = 0
+if user_data is not None:
+    Output = user_data.copy()
 if user_data is not None:
     # now it's time to clean the data, to train the model on the train data, and predict the out put for the user data
     combin = [train_data, user_data]
