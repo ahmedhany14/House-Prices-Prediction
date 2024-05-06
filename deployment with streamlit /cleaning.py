@@ -466,6 +466,7 @@ class Feature_Transforming(BaseEstimator, TransformerMixin):
                 X[column] = self.__fill_categorical_values_with_RF_model(X, column)
 
         return X
+
     # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     def __remove_outliers(self, X):
@@ -511,24 +512,25 @@ class Feature_Construction(BaseEstimator, TransformerMixin):
         4) TotalBath = FullBath + HalfBath
         5) TotalPorch = ScreenPorch + EnclosedPorch + OpenPorchSF
         After constructing them, i will convert them to binary columns, if the value > 0, it will be 1, else it will be 0
-    """ 
+    """
+
     def __feature_construction(self, X):
-        X['Totalarea'] = X['LotArea'] + X['LotFrontage']
-        X['TotalBsmtFin'] = X['BsmtFinSF1'] + X['BsmtFinSF2']
-        X['TotalSF'] = X['TotalBsmtSF'] + X['2ndFlrSF']
-        X['TotalBath'] = X['FullBath'] + X['HalfBath']
-        X['TotalPorch'] = X['ScreenPorch'] + X['EnclosedPorch'] + X['OpenPorchSF']
-        
+        X["Totalarea"] = X["LotArea"] + X["LotFrontage"]
+        X["TotalBsmtFin"] = X["BsmtFinSF1"] + X["BsmtFinSF2"]
+        X["TotalSF"] = X["TotalBsmtSF"] + X["2ndFlrSF"]
+        X["TotalBath"] = X["FullBath"] + X["HalfBath"]
+        X["TotalPorch"] = X["ScreenPorch"] + X["EnclosedPorch"] + X["OpenPorchSF"]
+
         def update(val):
             if val > 0:
                 return 1
             return 0
-        
-        X['Totalarea'] = X['Totalarea'].apply(update)
-        X['TotalBsmtFin'] = X['TotalBsmtFin'].apply(update)
-        X['TotalSF'] = X['TotalSF'].apply(update)
-        X['TotalBath'] = X['TotalBath'].apply(update)
-        X['TotalPorch'] = X['Totalarea'].apply(update)
+
+        X["Totalarea"] = X["Totalarea"].apply(update)
+        X["TotalBsmtFin"] = X["TotalBsmtFin"].apply(update)
+        X["TotalSF"] = X["TotalSF"].apply(update)
+        X["TotalBath"] = X["TotalBath"].apply(update)
+        X["TotalPorch"] = X["Totalarea"].apply(update)
         return X
 
     def transform(self, X, y=None):
@@ -553,45 +555,139 @@ class Feature_Construction(BaseEstimator, TransformerMixin):
 class Feature_Selection(BaseEstimator, TransformerMixin):
     def __init__(self):
         # these columns i will keep them, because they are important, even if they have low variance or strong correlation, or any other reason
-        self.imprortant_columns = ['TotalBath', 'TotalSF', 'TotalBsmtSF', 'TotalPorch', 'Totalarea']
+        self.imprortant_columns = [
+            "TotalBath",
+            "TotalSF",
+            "TotalBsmtSF",
+            "TotalPorch",
+            "Totalarea",
+            "GrLivArea",
+        ]
         pass
 
     def fit(self, X, y=None):
         return self
 
+    def __get_numerical_columns(self, X):
+        numerical_columns = []
+        for col in X.columns:
+            if X[col].dtype != "O" and col != "SalePrice":
+                numerical_columns.append(col)
+
+        return numerical_columns
+
+    # -------------------------------------------
+
+    # for getting categorical columns with null values to handle it
+    def __get_categorical_columns(self, X):
+        categorical_columns = []
+        for col in X.columns:
+            if X[col].dtype == "O":
+                categorical_columns.append(col)
+
+        return categorical_columns
+
     # For removing columns with low variance, based on threshold, which is 0.8 * (1 - 0.8)
     def __VarianceThreshold_for_numercal_columns(self, X):
-
+        numercal_columns = self.__get_numerical_columns(X)
+        percetage = 0.8 * (1 - 0.8)
+        data_set = X[numercal_columns]
+        var_thres = VarianceThreshold(threshold=percetage)
+        numercal_columns
+        var_thres.fit(data_set)
+        boolean_selection = var_thres.get_support()
+        columns_names = var_thres.feature_names_in_
+        remove = []
+        for i in range(len(boolean_selection)):
+            if (
+                boolean_selection[i] == False
+                and columns_names[i] not in self.imprortant_columns
+            ):
+                remove.append(columns_names[i])
+        X.drop(columns=remove, axis=1, inplace=True)
         return X
 
     # For removing columns with strong correlation
     def __strong_correlation(self, X):
-
+        numercal_columns = self.__get_numerical_columns(X)
+        data_set = X[numercal_columns]
+        pos_corr, neg_corr, remove = 0.8, -0.4, set()
+        correlation = data_set.corr()
+        for i in range(len(correlation.columns)):
+            for j in range(i):
+                corr_value = correlation.iloc[i, j]
+                if corr_value < 0 and corr_value < neg_corr:
+                    remove.add(correlation.columns[j])
+                elif corr_value > 0 and corr_value > pos_corr:
+                    remove.add(correlation.columns[j])
+        drop = []
+        for col in remove:
+            if col not in self.imprortant_columns:
+                drop.append(col)
+        X.drop(columns=drop, axis=1, inplace=True)
         return X
 
     # For removing columns with Chi2, based on p_value, if p_value <= 0.05, remove the column
     def __Chi2_for_categorical_columns(self, X):
-
+        categorical_columns = self.__get_categorical_columns(X)
+        data_set = X[categorical_columns]
+        ord = OrdinalEncoder()
+        ord.fit(data_set)
+        data_set[data_set.columns] = ord.transform(data_set)
+        train, target = data_set, X["SalePrice"]
+        columns = list(data_set.columns)
+        chi_state, p_value = chi2(train, target)
+        remove = set()
+        for i in range(len(p_value)):
+            if p_value[i] <= 0.05 and columns[i] not in self.imprortant_columns:
+                remove.add(columns[i])
+        X.drop(columns=remove, axis=1, inplace=True)
         return X
 
     # For removing columns with low variance, based on threshold, which is 0.8 * (1 - 0.8)
     def __VarianceThreshold_for_categorical_columns(self, X):
-
+        categorical_columns = self.__get_categorical_columns(X)
+        percetage = 0.8 * (1 - 0.8)
+        data_set = X[categorical_columns]
+        ord = OrdinalEncoder()
+        ord.fit(data_set)
+        data_set[data_set.columns] = ord.transform(data_set)
+        var_thres = VarianceThreshold(threshold=percetage)
+        var_thres.fit(data_set)
+        boolean_selection = var_thres.get_support()
+        columns_names = var_thres.feature_names_in_
+        remove = set()
+        for i in range(len(boolean_selection)):
+            if (
+                boolean_selection[i] == False
+                and columns_names[i] not in self.imprortant_columns
+            ):
+                remove.add(columns_names[i])
+        X.drop(columns=remove, axis=1, inplace=True)
         return X
 
     # For removing columns with same value more than 95%
     def __remove_columns_with_same_value(self, X):
-
+        remove = set()
+        for column in X.columns:
+            count = X[column].value_counts().sort_values(ascending=False)
+            top_value_count = count.iloc[0]
+            if (
+                top_value_count * 100 / len(X) > 85
+                and column not in self.imprortant_columns
+            ):
+                remove.add(column)
+        X.drop(columns=remove, axis=1, inplace=True)
         return X
 
     # For log SalePrice to fix skew
     def __log_SalePrice(self, X):
-
+        X["SalePrice"] = np.log1p(X["SalePrice"])
         return X
 
     # For Dummy dataset
     def __Dummy_dataset(self, X):
-
+        X = pd.get_dummies(X, drop_first=True)
         return X
 
     def transform(self, X, y=None):
@@ -606,3 +702,12 @@ class Feature_Selection(BaseEstimator, TransformerMixin):
         Data_set = self.__Dummy_dataset(Data_set)
 
         return Data_set
+
+
+pip = Pipeline(
+    [
+        ("Feature_Transforming", Feature_Transforming()),
+        ("Feature_Construction", Feature_Construction()),
+        ("Feature_Selection", Feature_Selection()),
+    ]
+)
