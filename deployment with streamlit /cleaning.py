@@ -688,6 +688,9 @@ class Feature_Selection(BaseEstimator, TransformerMixin):
     # For Dummy dataset
     def __Dummy_dataset(self, X):
         X = pd.get_dummies(X, drop_first=True)
+        for col in X.columns:
+            if X[col].dtype == "O":
+                X[col] = X[col].astype('int64')
         return X
 
     def transform(self, X, y=None):
