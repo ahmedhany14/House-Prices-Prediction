@@ -503,14 +503,37 @@ class Feature_Construction(BaseEstimator, TransformerMixin):
     def fit(self, X, y=None):
         return self
 
+    # this method will construct new 5 columns
+    """
+        1) Totalarea = LotArea + LotFrontage
+        2) TotalBsmtFin = BsmtFinSF1 + BsmtFinSF2
+        3) TotalSF = TotalBsmtSF + 2ndFlrSF
+        4) TotalBath = FullBath + HalfBath
+        5) TotalPorch = ScreenPorch + EnclosedPorch + OpenPorchSF
+        After constructing them, i will convert them to binary columns, if the value > 0, it will be 1, else it will be 0
+    """ 
     def __feature_construction(self, X):
+        X['Totalarea'] = X['LotArea'] + X['LotFrontage']
+        X['TotalBsmtFin'] = X['BsmtFinSF1'] + X['BsmtFinSF2']
+        X['TotalSF'] = X['TotalBsmtSF'] + X['2ndFlrSF']
+        X['TotalBath'] = X['FullBath'] + X['HalfBath']
+        X['TotalPorch'] = X['ScreenPorch'] + X['EnclosedPorch'] + X['OpenPorchSF']
+        
+        def update(val):
+            if val > 0:
+                return 1
+            return 0
+        
+        X['Totalarea'] = X['Totalarea'].apply(update)
+        X['TotalBsmtFin'] = X['TotalBsmtFin'].apply(update)
+        X['TotalSF'] = X['TotalSF'].apply(update)
+        X['TotalBath'] = X['TotalBath'].apply(update)
+        X['TotalPorch'] = X['Totalarea'].apply(update)
         return X
 
     def transform(self, X, y=None):
         Data_set = X.copy()
-
         Data_set = self.__feature_construction(Data_set)
-
         return Data_set
 
 
@@ -529,6 +552,8 @@ class Feature_Construction(BaseEstimator, TransformerMixin):
 
 class Feature_Selection(BaseEstimator, TransformerMixin):
     def __init__(self):
+        # these columns i will keep them, because they are important, even if they have low variance or strong correlation, or any other reason
+        self.imprortant_columns = ['TotalBath', 'TotalSF', 'TotalBsmtSF', 'TotalPorch', 'Totalarea']
         pass
 
     def fit(self, X, y=None):
