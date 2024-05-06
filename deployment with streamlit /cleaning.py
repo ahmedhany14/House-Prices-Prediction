@@ -405,7 +405,7 @@ class Feature_Selection(BaseEstimator, TransformerMixin):
             count = X[column].value_counts().sort_values(ascending=False)
             top_value_count = count.iloc[0]
             if (
-                top_value_count * 100 / len(X) > 85
+                top_value_count * 100 / len(X) > 95
                 and column not in self.imprortant_columns
             ):
                 remove.add(column)
