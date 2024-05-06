@@ -466,6 +466,15 @@ class Feature_Transforming(BaseEstimator, TransformerMixin):
                 X[column] = self.__fill_categorical_values_with_RF_model(X, column)
 
         return X
+    # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    def __remove_outliers(self, X):
+        X = X.drop(X[X["LotFrontage"] > 185].index)
+        X = X.drop(X[X["LotArea"] > 100000].index)
+        X = X.drop(X[X["BsmtFinSF1"] > 4000].index)
+        X = X.drop(X[X["TotalBsmtSF"] > 5000].index)
+        X = X.drop(X[X["GrLivArea"] > 4000].index)
+        return X
 
     def transform(self, X, y=None):
         Data_set = X.copy()
@@ -479,8 +488,9 @@ class Feature_Transforming(BaseEstimator, TransformerMixin):
         Data_set = self.__handle_missing_Numerical_values(Data_set)
         # 2.2. Categorical values
         Data_set = self.__handle_missing_Categorical_values(Data_set)
-        # 3. Outliers
 
+        # 3. Outliers
+        Data_set = self.__remove_outliers(Data_set)
         return Data_set
 
 
