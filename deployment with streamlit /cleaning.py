@@ -484,23 +484,8 @@ class Feature_Transforming(BaseEstimator, TransformerMixin):
         return Data_set
 
 
-data_set = pd.read_csv(
-    "/home/ahmed/Ai/Data science and Ml projects/House-Prices-Prediction---Data-Science-Ml-project/Date_set/train.csv"
-)
-data_set
-
-feature_transforming = Feature_Transforming()
-
-pip = Pipeline([("feature_transforming", feature_transforming)])
-
-
-data_set = pip.fit_transform(data_set)
-data_set
-st.write(type(data_set))
 # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # 2 Feature Construction
-
-
 class Feature_Construction(BaseEstimator, TransformerMixin):
     def __init__(self):
         pass
