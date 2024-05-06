@@ -25,6 +25,7 @@ from sklearn.metrics import (
     accuracy_score,
 )
 import streamlit as st
+from sklearn.pipeline import BaseEstimator, TransformerMixin
 
 pd.options.display.max_columns = None
 
@@ -294,3 +295,138 @@ def Feature_selection(boston=pd.DataFrame(), combin=[]):
         dataset.drop(columns=list(removed_columns), axis=1, inplace=True)
 
     return combin
+
+
+# 1 Feature Transforming
+"""
+1. Removing Redundant Features
+    1.1. Remove columns with high missing values
+2. Handling massing values
+    2.1. Numerical values
+    2.2. Categorical values
+3. Outliers
+"""
+
+
+class Feature_Transforming(BaseEstimator, TransformerMixin):
+    def __init__(self):
+        pass
+
+    def fit(self, X, y=None):
+        return self
+
+    def __remove_high_missing_values(self, X):
+        return X
+
+    def __handle_missing_Numerical_values(self, X):
+
+        return X
+
+    def __handle_missing_Categorical_values(self, X):
+
+        return X
+
+    def transform(self, X, y=None):
+        Data_set = X.copy()
+
+        # 1. Removing Redundant Features
+        # 1.1. Remove columns with high missing values
+        Data_set = self.__remove_high_missing_values(Data_set)
+
+        # 2. Handling massing values
+        # 2.1. Numerical values
+        Data_set = self.__handle_missing_Numerical_values(Data_set)
+        # 2.2. Categorical values
+        Data_set = self.__handle_missing_Categorical_values(Data_set)
+        # 3. Outliers
+
+        return Data_set
+
+
+# 2 Feature Construction
+
+
+class Feature_Construction(BaseEstimator, TransformerMixin):
+    def __init__(self):
+        pass
+
+    def fit(self, X, y=None):
+        return self
+
+    def __feature_construction(self, X):
+        return X
+
+    def transform(self, X, y=None):
+        Data_set = X.copy()
+
+        Data_set = self.__feature_construction(Data_set)
+
+        return Data_set
+
+
+# 3 Feature Selection
+"""
+3.1 VarianceThreshold for numercal columns
+    for constant columns or columns with low variance (that has more than 80% of the samples)
+3.2 strong correlation
+3.3 Chi2 for categorical columns
+3.4 VarianceThreshold for categorical columns
+3.5 remove columns that have same value more than 95 %
+3.6 log SalePrice to fix skew 
+3.7 Dummy dataset
+"""
+
+
+class Feature_Selection(BaseEstimator, TransformerMixin):
+    def __init__(self):
+        pass
+
+    def fit(self, X, y=None):
+        return self
+
+    # For removing columns with low variance, based on threshold, which is 0.8 * (1 - 0.8)
+    def __VarianceThreshold_for_numercal_columns(self, X):
+
+        return X
+
+    # For removing columns with strong correlation
+    def __strong_correlation(self, X):
+
+        return X
+
+    # For removing columns with Chi2, based on p_value, if p_value <= 0.05, remove the column
+    def __Chi2_for_categorical_columns(self, X):
+
+        return X
+
+    # For removing columns with low variance, based on threshold, which is 0.8 * (1 - 0.8)
+    def __VarianceThreshold_for_categorical_columns(self, X):
+
+        return X
+
+    # For removing columns with same value more than 95%
+    def __remove_columns_with_same_value(self, X):
+
+        return X
+
+    # For log SalePrice to fix skew
+    def __log_SalePrice(self, X):
+
+        return X
+
+    # For Dummy dataset
+    def __Dummy_dataset(self, X):
+
+        return X
+    def transform(self, X, y=None):
+        Data_set = X.copy()
+
+        Data_set = self.__VarianceThreshold_for_numercal_columns(Data_set)
+        Data_set = self.__strong_correlation(Data_set)
+        Data_set = self.__Chi2_for_categorical_columns(Data_set)
+        Data_set = self.__VarianceThreshold_for_categorical_columns(Data_set)
+        Data_set = self.__remove_columns_with_same_value(Data_set)
+        Data_set = self.__log_SalePrice(Data_set)
+        Data_set = self.__Dummy_dataset(Data_set)
+
+        return Data_set
