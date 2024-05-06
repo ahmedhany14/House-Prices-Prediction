@@ -25,7 +25,7 @@ from sklearn.metrics import (
     accuracy_score,
 )
 import streamlit as st
-from sklearn.pipeline import BaseEstimator, TransformerMixin
+from sklearn.base import BaseEstimator, TransformerMixin
 
 pd.options.display.max_columns = None
 
@@ -315,14 +315,155 @@ class Feature_Transforming(BaseEstimator, TransformerMixin):
     def fit(self, X, y=None):
         return self
 
+    # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     def __remove_high_missing_values(self, X):
+        un_wanted_columns, instance = [], len(X)
+        for column in X.columns:
+            percentage = X[column].isna().sum() * 100 / instance
+            if percentage > 30:
+                un_wanted_columns.append(column)
+        X.drop(columns=un_wanted_columns, axis=1, inplace=True)
         return X
 
+    # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    # -------------------------------------------
+    # for getting numerical columns with null values to handle it
+    def __get_numerical_columns(self, X):
+        numerical_columns = []
+        for col in X.columns:
+            null_percentage = X[col].isna().sum() * 100 / len(X)
+            if X[col].dtype != "O" and null_percentage > 0:
+                numerical_columns.append(col)
+
+        return numerical_columns
+
+    # -------------------------------------------
+
+    # for getting categorical columns with null values to handle it
+    def __get_categorical_columns(self, X):
+        categorical_columns = []
+        for col in X.columns:
+            null_percentage = X[col].isna().sum() * 100 / len(X)
+            if X[col].dtype == "O" and null_percentage > 0:
+                categorical_columns.append(col)
+
+        return categorical_columns
+
+    # -------------------------------------------
+
+    # method for filling numerical columns with mean values
+    def __fill_numerical_values_with_mean(self, X, column):
+        mean = X[column].mean()
+        X[column] = X[column].fillna(mean)
+        return X[column]
+
+    # -------------------------------------------
+
+    # method for filling numerical columns with linear model
+    # which i will use SalePrice as a train data to predict the missing values
+    # the method works as follows:
+    """
+        1) i will convert the column with missing values to -1, to be able to distinguish between the missing values and the other values
+        2) i will train linear model on sale price and the missing column
+        3) by using the sale price of the missing column, i will predict the value of missing column
+    """
+
+    def __fill_numerical_values_with_linear_model(self, X, column):
+        data = X[[column, "SalePrice"]].copy()
+        data[column] = data[column].fillna(-1)
+        train = data[data[column] != -1]
+        missied_data = pd.DataFrame(data[data[column] == -1]["SalePrice"])
+
+        x_train, x_test, y_train, y_test = train_test_split(
+            train.drop(columns=column, axis=1),
+            train[column],
+            train_size=0.01,
+            random_state=42,
+        )
+        lin_reg = LinearRegression()
+        lin_reg.fit(x_train, y_train)
+        predction = list(lin_reg.predict(missied_data))
+
+        def update(value):
+            if value == -1:
+                ret = int(predction[0])
+                predction.pop(0)
+                return ret
+            return value
+
+        X[column] = X[column].fillna(-1)
+        X[column] = X[column].apply(update)
+
+        return X[column]
+
+    # this method will use to handel numerical columns with missing values,
+    # if the missing values less than 3% it will fill it with the mean value
+    # if the missing values more than 3% it will fill it with a linear model, which i will use SalePrice as a train data to predict the missing values
     def __handle_missing_Numerical_values(self, X):
+        numerical_columns = self.__get_numerical_columns(X)
+
+        for column in numerical_columns:
+            percentage = X[column].isna().sum() * 100 / len(X)
+            if percentage <= 3:
+                X[column] = self.__fill_numerical_values_with_mean(X, column)
+            else:
+                X[column] = self.__fill_numerical_values_with_linear_model(X, column)
 
         return X
 
+    # --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    # method for filling numerical columns with random forest model
+    # which i will use SalePrice as a train data to predict the missing values
+    # the method works as follows:
+    """
+        1) i will convert the column with missing values to "missied_data", to be able to distinguish between the missing values and the other values
+        2) i will train random forest model on sale price and the missing column
+        3) by using the sale price of the missing column, i will predict the value of missing column
+    """
+
+    def __fill_categorical_values_with_RF_model(self, dataset, column):
+        data = dataset[[column, "SalePrice"]].copy()
+        data[column] = data[column].fillna("missied_data")
+        train = data[data[column] != "missied_data"]
+        missied_data = pd.DataFrame(data[data[column] == "missied_data"]["SalePrice"])
+
+        x_train, x_test, y_train, y_test = train_test_split(
+            train.drop(columns=column, axis=1),
+            train[column],
+            train_size=0.01,
+            random_state=42,
+        )
+
+        RF = RandomForestClassifier(ccp_alpha=0.015)
+        RF.fit(x_train, y_train)
+        predction = list(RF.predict(missied_data))
+
+        def update(value):
+            if value == "missied_data":
+                ret = predction[0]
+                predction.pop(0)
+                return ret
+            return value
+
+        dataset[column] = dataset[column].fillna("missied_data")
+        dataset[column] = dataset[column].apply(update)
+
+        return dataset[column]
+
+    # this method will use to handel categorical columns with missing values,
+    # if the missing values less than 3% it will fill it with the mode value
+    # if the missing values more than 3% it will fill it with a random forest model, which i will use SalePrice as a train data to predict the missing values
     def __handle_missing_Categorical_values(self, X):
+        categorical_columns = self.__get_categorical_columns(X)
+
+        for column in categorical_columns:
+            percentage = X[column].isna().sum() * 100 / len(X)
+            if percentage <= 3:
+                X[column] = X[column].fillna(X[column].mode()[0])
+            else:
+                X[column] = self.__fill_categorical_values_with_RF_model(X, column)
 
         return X
 
@@ -343,6 +484,20 @@ class Feature_Transforming(BaseEstimator, TransformerMixin):
         return Data_set
 
 
+data_set = pd.read_csv(
+    "/home/ahmed/Ai/Data science and Ml projects/House-Prices-Prediction---Data-Science-Ml-project/Date_set/train.csv"
+)
+data_set
+
+feature_transforming = Feature_Transforming()
+
+pip = Pipeline([("feature_transforming", feature_transforming)])
+
+
+data_set = pip.fit_transform(data_set)
+data_set
+st.write(type(data_set))
+# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # 2 Feature Construction
 
 
@@ -418,6 +573,7 @@ class Feature_Selection(BaseEstimator, TransformerMixin):
     def __Dummy_dataset(self, X):
 
         return X
+
     def transform(self, X, y=None):
         Data_set = X.copy()
 
