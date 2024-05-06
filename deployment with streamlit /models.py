@@ -41,9 +41,6 @@ def Linear_Regression():
     lin_reg = LinearRegression()
     pip = Pipeline(
         [
-            ("feature_transforming", feature_transforming),
-            ("feature_selection", feature_selection),
-            ("feature_construction", feature_construction),
             ("LinearRegression", lin_reg),
         ]
     )
@@ -56,9 +53,6 @@ def Linear_scaled():
     """
     pip = Pipeline(
         [
-            ("feature_transforming", feature_transforming),
-            ("feature_selection", feature_selection),
-            ("feature_construction", feature_construction),
             ("Scaling", StandardScaler()),
             ("LinearRegression", LinearRegression(positive=True)),
         ]
@@ -75,9 +69,6 @@ def Ridge_Regression():
 
     pip = Pipeline(
         [
-            ("feature_transforming", feature_transforming),
-            ("feature_selection", feature_selection),
-            ("feature_construction", feature_construction),
             ("Ridge", ridge),
         ]
     )
@@ -91,9 +82,6 @@ def ElasticNet_Regression():
     elastic = ElasticNet(max_iter=5000, alpha=0.0005, l1_ratio=0.5)
     pip = Pipeline(
         [
-            ("feature_transforming", feature_transforming),
-            ("feature_selection", feature_selection),
-            ("feature_construction", feature_construction),
             ("ElasticNet", elastic),
         ]
     )
@@ -115,9 +103,6 @@ def DecisionTree():
 
     pip = Pipeline(
         [
-            ("feature_transforming", feature_transforming),
-            ("feature_selection", feature_selection),
-            ("feature_construction", feature_construction),
             ("DecisionTree", dt),
         ]
     )
@@ -133,9 +118,6 @@ def Knn():
 
     pip = Pipeline(
         [
-            ("feature_transforming", feature_transforming),
-            ("feature_selection", feature_selection),
-            ("feature_construction", feature_construction),
             ("Knn", knn),
         ]
     )
@@ -159,9 +141,6 @@ def RandomForest():
 
     pip = Pipeline(
         [
-            ("feature_transforming", feature_transforming),
-            ("feature_selection", feature_selection),
-            ("feature_construction", feature_construction),
             ("RandomForest", rf),
         ]
     )
@@ -177,9 +156,6 @@ def Svr():
 
     pip = Pipeline(
         [
-            ("feature_transforming", feature_transforming),
-            ("feature_selection", feature_selection),
-            ("feature_construction", feature_construction),
             ("SVR", svr),
         ]
     )
@@ -203,10 +179,7 @@ def Voting_system():
             ("LinearRegression scaled ", linear_scaled),
             ("Ridge", ridge),
             ("ElasticNet", elastic),
-            ("DecisionTree", dt),
             ("RandomForestRegressor", random_forest),
-            ("Knn", knn),
-            ("Svr", svr),
         ]
     )
     return vot

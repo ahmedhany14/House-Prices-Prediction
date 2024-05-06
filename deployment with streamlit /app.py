@@ -14,7 +14,12 @@ from sklearn.metrics import (
     mean_absolute_error,
     mean_squared_error,
 )
+import pickle
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.pipeline import Pipeline
+import cleaning as cl
 
+st.set_page_config(page_title="House Price Prediction", page_icon="🏠")
 pd.options.display.max_columns = None
 
 pd.options.display.max_columns = None
@@ -28,7 +33,7 @@ train_data = pd.read_csv(
     "/home/ahmed/Ai/Data science and Ml projects/House-Prices-Prediction---Data-Science-Ml-project/Date_set/train.csv"
 )
 
-
+boston_house = train_data.copy()
 # ---------------------------------EDA---------------------------------#
 # This Bolck of code will be contains The EDA of the Traing dataset
 # in which will contain the following steps:
@@ -109,21 +114,6 @@ if EDA_button:
 # ----------------------------------END EDA----------------------------------#
 
 
-# ---------------------------------User Input and Train Preprocessing ---------------------------------#
-# Steps:
-# 1. removing the columns with high missing values
-# 2. Handling massing values for the train data
-# 2.1. Numerical values (train_data data set)
-# 2.2. Categorical values (train_data data set)
-# 2.3. Handling massing values for the user data
-
-# 3.Outliers for train_data
-# 4.Feature Construction (construction of new features for both data sets and then convert them to Binay Columns)
-# 5.Feature Selection on train data
-# 6.log SalePrice to fix skew
-# 7.Dummy dataset
-
-
 # function for getting user input data, which will be taken as a CSV file from user
 def user_input_data():
 
@@ -145,149 +135,211 @@ def user_input_data():
 
 # loading the data from user
 user_data = user_input_data()
-Output = 0
-if user_data is not None:
-    Output = user_data.copy()
-if user_data is not None:
-    # now it's time to clean the data, to train the model on the train data, and predict the out put for the user data
-    combin = [train_data, user_data]
+data = {
+    "model": [],
+    "MAE": [],
+    "MSE": [],
+    "RMSE": [],
+    "train_score": [],
+    "test_score": [],
+}
+models = pd.DataFrame(columns=data)
 
-    # 1. removing the columns with high missing values
-    cl.remove_column_with_high_missing_values(train_data, combin)
-
-    # 2. Handling massing values for the train data
-
-    null_num_columns, null_cat_columns = cl.get_null_columns(train_data)
-    # 2.1. Numerical values (train_data data set)
-    train_data = cl.handle_missing_Numerical_values(train_data, null_num_columns)
-    # 2.2. Categorical values (train_data data set)
-    train_data = cl.handle_missing_Categorical_values(train_data, null_cat_columns)
-
-    # 2.3. Handling massing values for the user data
-    null_num_columns, null_cat_columns = cl.get_null_columns(user_data)
-    for column in null_cat_columns:
-        user_data[column] = cl.fill_numerical_values_with_mode(user_data, column)
-
-    for column in null_num_columns:
-        user_data[column] = cl.fill_numerical_values_with_mean(user_data, column)
-
-    # 3.Outliers for train_data
-    train_data = cl.Outliers_for_train(train_data)
-    combin = [train_data, user_data]
-
-    # 4. Feature Construction (construction of new features for both data sets, and then convert them to Binay Columns)
-    combin = cl.Feature_construction(combin)
-
-    # 5.Feature Selection on train data
-    combin = cl.Feature_selection(train_data, combin)
-
-    # 6. log SalePrice to fix skew
-    train_data["SalePrice"] = np.log10(train_data["SalePrice"])
-
-    # 7. Dummy dataset
-    train_data = pd.get_dummies(train_data, drop_first=True)
-    user_data = pd.get_dummies(user_data, drop_first=True)
-    user_data["Exterior1st_ImStucc"] = False
-    user_data["Exterior1st_Stone"] = False
-    final_user_data = pd.DataFrame()
-    for col in train_data.columns:
-        if col != "SalePrice":
-            final_user_data[col] = user_data[col]
-    user_data = final_user_data
-
-    for col in train_data.columns:
-        if train_data[col].dtype == "bool":
-            train_data[col] = train_data[col].astype("int32")
-
-    for col in user_data.columns:
-        if user_data[col].dtype == "bool":
-            user_data[col] = user_data[col].astype("int32")
 
 # ---------------------------------ML Model---------------------------------#
+def evaluate(model, model_name, x_train, x_test, y_train, y_test):
+    train_prediction = model.predict(x_train)
+    test_prediction = model.predict(x_test)
+    score_train = r2_score(y_true=y_train, y_pred=train_prediction)
+
+    score_test = r2_score(y_true=y_test, y_pred=test_prediction)
+    MAE = mean_absolute_error(y_true=y_test, y_pred=test_prediction)
+    MSE = mean_squared_error(y_true=y_test, y_pred=test_prediction)
+    RMSE = np.sqrt(mean_absolute_error(y_true=y_test, y_pred=test_prediction))
+    data = {
+        "model": model_name,
+        "MAE": MAE,
+        "MSE": MSE,
+        "RMSE": RMSE,
+        "train_score": score_train,
+        "test_score": score_test,
+    }
+
+    return data
+
+
+def split(data):
+    X = data.drop("SalePrice", axis=1)
+    Y = data["SalePrice"]
+    from sklearn.model_selection import train_test_split
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, Y, test_size=0.3, random_state=42
+    )
+    return X_train, X_test, y_train, y_test
+
+
+process_pip = Pipeline(
+    [
+        ("feature_transforming", cl.Feature_Transforming()),
+        ("feature_construction", cl.Feature_Construction()),
+        ("feature_selection", cl.Feature_Selection()),
+    ]
+)
+boston_house = process_pip.fit_transform(boston_house)
+
+
+class modify_test(BaseEstimator, TransformerMixin):
+    def __init__(self):
+        pass
+
+    def fit(self, X, y=None):
+        return self
+
+    def construct(self, X):
+        X["Totalarea"] = X["LotArea"] + X["LotFrontage"]
+        X["TotalBsmtFin"] = X["BsmtFinSF1"] + X["BsmtFinSF2"]
+        X["TotalSF"] = X["TotalBsmtSF"] + X["2ndFlrSF"]
+        X["TotalBath"] = X["FullBath"] + X["HalfBath"]
+        X["TotalPorch"] = X["ScreenPorch"] + X["EnclosedPorch"] + X["OpenPorchSF"]
+
+        def update(val):
+            if val > 0:
+                return 1
+            return 0
+
+        X["Totalarea"] = X["Totalarea"].apply(update)
+        X["TotalBsmtFin"] = X["TotalBsmtFin"].apply(update)
+        X["TotalSF"] = X["TotalSF"].apply(update)
+        X["TotalBath"] = X["TotalBath"].apply(update)
+        X["TotalPorch"] = X["Totalarea"].apply(update)
+        return X
+
+    def Dummy(self, X):
+        X = pd.get_dummies(X, drop_first=True)
+        return X
+
+    def missing(self, X):
+        for i in X.columns:
+            if X[i].isnull().sum() > 0:
+                X[i] = X[i].fillna(X[i].mean())
+        return X
+
+    def drop_columns(self, X):
+        column = boston_house.columns
+        remove = []
+        for i in X.columns:
+            if i not in column:
+                remove.append(i)
+        X = X.drop(remove, axis=1)
+        return X
+
+    def fill_missing_columns(self, X):
+        column = boston_house.columns
+        for i in column:
+            if i not in X.columns and i != "SalePrice":
+                X[i] = 0
+        return X
+
+    def rearrange(self, X):
+        col = []
+        for i in boston_house.columns:
+            if i in X.columns:
+                col.append(i)
+        X = X[col]
+        return X
+
+    def transform(self, X):
+        X = self.construct(X)
+        X = self.Dummy(X)
+        X = self.missing(X)
+        X = self.drop_columns(X)
+        X = self.fill_missing_columns(X)
+        X = self.rearrange(X)
+        return X
+
 
 if user_data is not None:
+    Out_put = user_data.copy()
+    pip = Pipeline([("modify_test", modify_test())])
+    user_data = pip.fit_transform(user_data)
 
-    data = {
-        "model": [],
-        "MAE": [],
-        "MSE": [],
-        "RMSE": [],
-        "train_score": [],
-        "test_score": [],
-    }
-    models = pd.DataFrame(columns=data)
+    lin_reg = pickle.load(open("linear.pkl", "rb"))
+    lin_reg_scaled = pickle.load(open("linear_scaled.pkl", "rb"))
+    ridge = pickle.load(open("ridge.pkl", "rb"))
+    elastic = pickle.load(open("elastic.pkl", "rb"))
+    knn = pickle.load(open("knn.pkl", "rb"))
+    svr = pickle.load(open("svr.pkl", "rb"))
+    dt = pickle.load(open("dt.pkl", "rb"))
+    rf_model = pickle.load(open("random_forest.pkl", "rb"))
+    vot_model = pickle.load(open("vot_model.pkl", "rb"))
 
-    def split(data):
-        X = data.drop("SalePrice", axis=1)
-        Y = data["SalePrice"]
-        from sklearn.model_selection import train_test_split
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, Y, test_size=0.2, random_state=42
-        )
-        return X_train, X_test, y_train, y_test
+    x_train, x_test, y_train, y_test = split(boston_house)
 
-    x_train, x_test, y_train, y_test = split(train_data)
+    lin_reg.fit(x_train, y_train)
+    lin_reg_scaled.fit(x_train, y_train)
+    ridge.fit(x_train, y_train)
+    elastic.fit(x_train, y_train)
+    knn.fit(x_train, y_train)
+    svr.fit(x_train, y_train)
+    dt.fit(x_train, y_train)
+    rf_model.fit(x_train, y_train)
+    vot_model.fit(x_train, y_train)
 
-    def evaluate(model,model_name, x_train, x_test, y_train, y_test):
-        train_prediction = model.predict(x_train)
-        test_prediction = model.predict(x_test)
-        score_train = r2_score(y_true=y_train, y_pred=train_prediction)
-
-        score_test = r2_score(y_true=y_test, y_pred=test_prediction)
-        MAE = mean_absolute_error(y_true=y_test, y_pred=test_prediction)
-        MSE = mean_squared_error(y_true=y_test, y_pred=test_prediction)
-        RMSE = np.sqrt(mean_absolute_error(y_true=y_test, y_pred=test_prediction))
-        data = {
-            "model": model_name,
-            "MAE": MAE,
-            "MSE": MSE,
-            "RMSE": RMSE,
-            "train_score": score_train,
-            "test_score": score_test,
-        }
-
-        return data
-
-    # Linear Regression model
-    lin_reg = ml.Linear_Regression(x_train, y_train)
-    # Linear Regression model with scaling
-    lin_reg_scaled = ml.Linear_scaled(x_train, y_train)
-    # ridge Regression model
-    ridge = ml.Ridge_Regression(x_train, y_train)
-    # ElasticNet Regression model
-    elastic = ml.ElasticNet_Regression(x_train, y_train)
-    # Random Forest model
-    rf_model = ml.RandomForest(x_train, y_train)
-    # Voting model
-    vot_model = ml.Voting_system(x_train, y_train)
-
-    models.loc[len(models)] = evaluate(lin_reg,"lin reg", x_train, x_test, y_train, y_test)
-    models.loc[len(models)] = evaluate(lin_reg_scaled,"lin reg scaled", x_train, x_test, y_train, y_test)
-    models.loc[len(models)] = evaluate(ridge,"Ridge", x_train, x_test, y_train, y_test)
-    models.loc[len(models)] = evaluate(elastic,"Elastic", x_train, x_test, y_train, y_test)
-    models.loc[len(models)] = evaluate(rf_model,"Random Foreest", x_train, x_test, y_train, y_test)
-    models.loc[len(models)] = evaluate(vot_model,"Votting", x_train, x_test, y_train, y_test)
+    models.loc[len(models)] = evaluate(
+        lin_reg, "lin reg", x_train, x_test, y_train, y_test
+    )
+    models.loc[len(models)] = evaluate(
+        lin_reg_scaled, "lin reg scaled", x_train, x_test, y_train, y_test
+    )
+    models.loc[len(models)] = evaluate(ridge, "Ridge", x_train, x_test, y_train, y_test)
+    models.loc[len(models)] = evaluate(
+        elastic, "Elastic", x_train, x_test, y_train, y_test
+    )
+    models.loc[len(models)] = evaluate(knn, "Knn", x_train, x_test, y_train, y_test)
+    models.loc[len(models)] = evaluate(svr, "Svr", x_train, x_test, y_train, y_test)
+    models.loc[len(models)] = evaluate(
+        dt, "Decision Tree", x_train, x_test, y_train, y_test
+    )
+    models.loc[len(models)] = evaluate(
+        rf_model, "Random Foreest", x_train, x_test, y_train, y_test
+    )
+    models.loc[len(models)] = evaluate(
+        vot_model, "Votting", x_train, x_test, y_train, y_test
+    )
 
     model_performance = st.toggle("Model Performance")
     if model_performance:
         st.write("### Models Performance on the train data")
         st.write(models.sort_values(by="test_score", ascending=False))
         fig = plt.figure(figsize=(10, 5))
-        sns.lineplot(y=models["test_score"], x=models["model"])
+        sns.lineplot(y=models["train_score"], x=models["model"], label="Train Score")
+        for i in range(len(models)):
+            plt.text(
+                i, models["train_score"][i], f'{round(models["train_score"][i],3)}%'
+            )
+
+        sns.lineplot(y=models["test_score"], x=models["model"], label="Test Score")
+
+        plt.xticks(rotation=60)
+
+        # displaying the percentage of each model in the plot
+        for i in range(len(models)):
+            plt.text(i, models["test_score"][i], f'{round(models["test_score"][i],3)}%')
         st.pyplot(fig)
-# ---------------------------------User Input Prediction---------------------------------#
+    # ---------------------------------User Input Prediction---------------------------------#
 
     if user_data is not None:
+
         def output_inverse(value):
             value_inverse = math.pow(10, value)
             return value_inverse
-
 
         predictions = vot_model.predict(user_data)
 
         for i in range(len(predictions)):
             predictions[i] = output_inverse(predictions[i])
-        
-        Output["Predictions 📈"] = predictions
+
+        Out_put["Predictions 📈"] = predictions
         st.write("### Predicted Sale Price for the user data")
-        st.write(Output)
+        st.write(Out_put)
